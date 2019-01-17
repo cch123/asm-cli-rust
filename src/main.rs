@@ -1,5 +1,8 @@
-use capstone::prelude::*;
+//use capstone::prelude::*;
+use keystone::*;
 
+
+/*
 const X86_CODE: &'static [u8] = b"\x55\x48\x8b\x05\xb8\x13\x00\x00\xe9\x14\x9e\x08\x00\x45\x31\xe4";
 
 /// Print register names
@@ -49,21 +52,51 @@ fn example() -> CsResult<()> {
     }
     Ok(())
 }
+*/
 
 fn main() {
+    let engine =
+        Keystone::new(Arch::X86, keystone::keystone_const::MODE_64).expect("Could not initialize Keystone engine");
+
+    engine
+        .option(OptionType::SYNTAX, keystone::OPT_SYNTAX_NASM)
+        .expect("Could not set option to nasm syntax");
+
+
+    /*
+    if let Err(err) = engine.asm("INVALID".to_string(), 0) {
+        println!("Error: {}", err);
+    }
+    */
+
     loop {
+        println!("input your commands");
         let mut input = String::new();
         match std::io::stdin().read_line(&mut input) {
             Ok(n) => {
-                println!("{} bytes read", n);
-                println!("{}", input);
+                //println!("{} bytes read", n);
+                //println!("{}", input);
+
+                let result = engine
+                    .asm(input.to_string(), 0);
+                match result {
+                    Ok(r) => {
+                        println!("ASM result: {:?}", r.bytes);
+                        println!("ASM result: {}", r);
+                    },
+                    Err(e) => {
+                        println!("failed to assemble, err: {:?}", e)
+                    },
+                }
             }
-            Err(error) => println!("error: {}", error),
+            Err(error) => println!("error when read your input: {}", error),
         }
-        println!("input your commands");
+        println!();
+        /*
         if let Err(err) = example() {
             println!("Error: {}", err);
         }
+        */
     }
 }
 
