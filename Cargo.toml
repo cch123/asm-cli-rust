@@ -1,0 +1,8 @@
+[package]
+name = "capstone"
+version = "0.1.0"
+authors = ["Xargin <cao1988228@163.com>"]
+edition = "2018"
+
+[dependencies]
+capstone = "^0.5.0"

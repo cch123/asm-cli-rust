@@ -1,0 +1,32 @@
+[[package]]
+name = "capstone"
+version = "0.1.0"
+dependencies = [
+ "capstone 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "capstone"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "capstone-sys 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "capstone-sys"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "cc 1.0.28 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "cc"
+version = "1.0.28"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[metadata]
+"checksum capstone 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "00be9d203fa0e078b93b24603633fb081851dfe0c1086364431f52587a47157e"
+"checksum capstone-sys 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2dc8d32bc5c1e6d0fcde10af411c98b07d93498d51654f678757f08fa2acd6a6"
+"checksum cc 1.0.28 (registry+https://github.com/rust-lang/crates.io-index)" = "bb4a8b715cb4597106ea87c7c84b2f1d452c7492033765df7f32651e66fcf749"
