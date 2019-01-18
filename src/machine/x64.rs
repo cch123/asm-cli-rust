@@ -6,25 +6,18 @@ pub struct X64Machine<'a> {
     pub register_map: HashMap<&'a str, unicorn::RegisterX86>,
     pub keystone: keystone::Keystone,
     pub emu : unicorn::CpuX86,
+    pub sorted_reg_names : Vec<&'a str>
 }
 
 use super::interface::Interface;
 
 impl <'a>Interface for X64Machine<'a> {
-    fn print_register(&self){
-        let sorted_x64_reg_name = vec![
-            "rax", "rbx", "rcx", "rdx", "end",
-            "rsi", "rdi", "r8", "r9", "end",
-            "r10", "r11", "r12", "r13", "end",
-            "r14", "r15", "end",
-            "rip", "rbp", "rsp", "end",
-            "cs", "ss", "ds", "es", "end",
-            "fs", "gs", "end", "flags", "end",
-        ];
+    fn print_register(&self) {
 
         println!("----------------- cpu context -----------------");
 
-        for reg_name in sorted_x64_reg_name {
+        // 不写 clone 会报 cannot move out of borrowed content
+        for reg_name in self.sorted_reg_names.clone() {
             if reg_name == "end" {
                 println!();
                 continue;
@@ -43,6 +36,22 @@ impl <'a>Interface for X64Machine<'a> {
 
         println!("----------------- stack context -----------------");
     }
+
+    fn asm(&self, str: String, address: u64) -> Result<AsmResult, Error>{
+        return self.keystone.asm(str,address);
+    }
+
+    fn write_instruction(&self, byte_arr: Vec<u8>) {
+        let _ = self.emu.mem_map(0x0000, 0x4000, unicorn::PROT_ALL);
+        let _ = self.emu.mem_write(0x0000, &byte_arr);
+        let _ = self.emu.emu_start(
+            0x0000,
+            (0x0000 + byte_arr.len()) as u64,
+            10 * unicorn::SECOND_SCALE,
+            1000,
+        );
+    }
+
 }
 
 impl <'a>X64Machine <'a>{
@@ -51,16 +60,27 @@ impl <'a>X64Machine <'a>{
             .expect("Could not initialize Keystone engine");
 
         engine
-            .option(OptionType::SYNTAX, keystone::OPT_SYNTAX_NASM)
+            .option(OptionType::SYNTAX, keystone::OPT_SYNTAX_INTEL)
             .expect("Could not set option to nasm syntax");
         let mut map = HashMap::new();
         X64Machine::init_register_map(&mut map);
         let cpu = CpuX86::new(unicorn::Mode::MODE_64).expect("failed to instantiate emulator");
 
+        let sorted_x64_reg_name = vec![
+            "rax", "rbx", "rcx", "rdx", "end",
+            "rsi", "rdi", "r8", "r9", "end",
+            "r10", "r11", "r12", "r13", "end",
+            "r14", "r15", "end",
+            "rip", "rbp", "rsp", "end",
+            "cs", "ss", "ds", "es", "end",
+            "fs", "gs", "end", "flags", "end",
+        ];
+
         return X64Machine {
             register_map: map,
             keystone: engine,
             emu : cpu,
+            sorted_reg_names : sorted_x64_reg_name,
         };
     }
 
