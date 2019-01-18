@@ -3,8 +3,46 @@ use keystone::*;
 use unicorn::{Cpu, CpuX86};
 
 pub struct X64Machine<'a> {
-    register_map: HashMap<&'a str, unicorn::RegisterX86>,
-    keystone: keystone::Keystone,
+    pub register_map: HashMap<&'a str, unicorn::RegisterX86>,
+    pub keystone: keystone::Keystone,
+    pub emu : unicorn::CpuX86,
+}
+
+use super::interface::Interface;
+
+impl <'a>Interface for X64Machine<'a> {
+    fn print_register(&self){
+        let sorted_x64_reg_name = vec![
+            "rax", "rbx", "rcx", "rdx", "end",
+            "rsi", "rdi", "r8", "r9", "end",
+            "r10", "r11", "r12", "r13", "end",
+            "r14", "r15", "end",
+            "rip", "rbp", "rsp", "end",
+            "cs", "ss", "ds", "es", "end",
+            "fs", "gs", "end", "flags", "end",
+        ];
+
+        println!("----------------- cpu context -----------------");
+
+        for reg_name in sorted_x64_reg_name {
+            if reg_name == "end" {
+                println!();
+                continue;
+            }
+
+            let &uc_reg = self.register_map.get(reg_name).unwrap();
+
+            // pad reg_name to 3 bytes
+            let mut reg_name = reg_name.to_string();
+            while reg_name.len() < 3 {
+                reg_name.push(' ');
+            }
+
+            print!("{} : {} ", reg_name, self.emu.reg_read(uc_reg).unwrap());
+        }
+
+        println!("----------------- stack context -----------------");
+    }
 }
 
 impl <'a>X64Machine <'a>{
@@ -17,10 +55,12 @@ impl <'a>X64Machine <'a>{
             .expect("Could not set option to nasm syntax");
         let mut map = HashMap::new();
         X64Machine::init_register_map(&mut map);
+        let cpu = CpuX86::new(unicorn::Mode::MODE_64).expect("failed to instantiate emulator");
 
         return X64Machine {
             register_map: map,
             keystone: engine,
+            emu : cpu,
         };
     }
 
@@ -53,39 +93,4 @@ impl <'a>X64Machine <'a>{
         m.insert("gs", unicorn::RegisterX86::GS);
     }
 
-    fn print_register(emu: &unicorn::CpuX86) {
-        let mut map = HashMap::new();
-        X64Machine::init_register_map(&mut map);
-
-        let mut sorted_x64_reg_name = vec![
-            "rax", "rbx", "rcx", "rdx", "end",
-            "rsi", "rdi", "r8", "r9", "end",
-            "r10", "r11", "r12", "r13", "end",
-            "r14", "r15", "end",
-            "rip", "rbp", "rsp", "end",
-            "cs", "ss", "ds", "es", "end",
-            "fs", "gs", "end", "flags", "end",
-        ];
-
-        println!("----------------- cpu context -----------------");
-
-        for reg_name in sorted_x64_reg_name {
-            if reg_name == "end" {
-                println!();
-                continue;
-            }
-
-            let &uc_reg = map.get(reg_name).unwrap();
-
-            // pad reg_name to 3 bytes
-            let mut reg_name = reg_name.to_string();
-            while reg_name.len() < 3 {
-                reg_name.push(' ');
-            }
-
-            print!("{} : {} ", reg_name, emu.reg_read(uc_reg).unwrap());
-        }
-
-        println!("----------------- stack context -----------------");
-    }
 }
