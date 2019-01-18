@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use keystone::*;
 use unicorn::{Cpu, CpuX86};
+//use hex::*;
 
 pub struct X64Machine<'a> {
     pub register_map: HashMap<&'a str, unicorn::RegisterX86>,
@@ -31,7 +32,7 @@ impl <'a>Interface for X64Machine<'a> {
                 reg_name.push(' ');
             }
 
-            print!("{} : {} ", reg_name, self.emu.reg_read(uc_reg).unwrap());
+            print!("{} : {:016x} ", reg_name, self.emu.reg_read(uc_reg).unwrap());
         }
 
         println!("----------------- stack context -----------------");
@@ -49,6 +50,21 @@ impl <'a>Interface for X64Machine<'a> {
             10 * unicorn::SECOND_SCALE,
             1000,
         );
+    }
+
+    fn print_stack(&self) {
+        let start_address = 0x1300000-72;
+        let mem_data = self.emu.mem_read(start_address,8*4*5).unwrap();
+        // 8 个字节打印一次
+        (0..mem_data.len()).step_by(32).for_each(|idx|{
+            print!("{:016x} :", start_address + idx as u64 + 8);
+            (0..4).for_each(|offset|{
+                let mut cur = mem_data[idx+offset*8..idx+offset*8+8].to_vec();
+                cur.reverse();
+                print!("{} ", hex::encode(cur));
+            });
+            println!();
+        });
     }
 
 }

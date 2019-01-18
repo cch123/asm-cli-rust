@@ -16,7 +16,8 @@ fn main() {
                 match result {
                     Ok(r) => {
                         m.write_instruction(r.bytes);
-                        m.print_register()
+                        m.print_register();
+                        m.print_stack();
                     }
                     Err(e) => println!("failed to assemble, err: {:?}", e),
                 }
