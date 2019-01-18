@@ -42,7 +42,6 @@ impl <'a>Interface for X64Machine<'a> {
     }
 
     fn write_instruction(&self, byte_arr: Vec<u8>) {
-        let _ = self.emu.mem_map(0x0000, 0x4000, unicorn::PROT_ALL);
         let _ = self.emu.mem_write(0x0000, &byte_arr);
         let _ = self.emu.emu_start(
             0x0000,
@@ -64,7 +63,10 @@ impl <'a>X64Machine <'a>{
             .expect("Could not set option to nasm syntax");
         let mut map = HashMap::new();
         X64Machine::init_register_map(&mut map);
-        let cpu = CpuX86::new(unicorn::Mode::MODE_64).expect("failed to instantiate emulator");
+        let mut cpu = CpuX86::new(unicorn::Mode::MODE_64).expect("failed to instantiate emulator");
+        cpu.reg_write(unicorn::RegisterX86::RSP,0x01300000);
+        cpu.reg_write(unicorn::RegisterX86::RBP,0x10000000);
+        cpu.mem_map(0x0000,0x20000000, unicorn::PROT_ALL);
 
         let sorted_x64_reg_name = vec![
             "rax", "rbx", "rcx", "rdx", "end",
