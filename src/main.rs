@@ -1,7 +1,8 @@
-//use capstone::prelude::*;
+pub mod machine;
+
 use keystone::*;
-use std::collections::HashMap;
 use unicorn::{Cpu, CpuX86};
+use std::collections::HashMap;
 
 fn init_register_map(m: &mut HashMap<&str, unicorn::RegisterX86>) {
     m.insert("rax", unicorn::RegisterX86::RAX);
@@ -68,7 +69,9 @@ fn print_register(emu: &unicorn::CpuX86) {
     println!("----------------- stack context -----------------");
 }
 
+
 fn main() {
+    let x = machine::x64::X64Machine::new();
     let engine = Keystone::new(Arch::X86, keystone::keystone_const::MODE_64)
         .expect("Could not initialize Keystone engine");
 
