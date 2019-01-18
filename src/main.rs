@@ -1,7 +1,5 @@
 pub mod machine;
 
-use unicorn::Cpu;
-
 use crate::machine::interface::Interface;
 fn get_trait() -> impl Interface {
     let m = machine::x64::X64Machine::new();
