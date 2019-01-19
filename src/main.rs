@@ -2,7 +2,7 @@ pub mod machine;
 
 use crate::machine::interface::Machine;
 fn get_trait() -> Machine <'static>{
-    let m = machine::x64::new();
+    let m = machine::x32::new();
     return m;
 }
 
