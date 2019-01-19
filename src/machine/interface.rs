@@ -1,26 +1,17 @@
-use keystone::{AsmResult,Error};
+use keystone::{AsmResult, Error};
 use std::collections::HashMap;
-use keystone::*;
-use unicorn::{Cpu, CpuX86};
+use unicorn::Cpu;
 
-pub trait Interface {
-    fn print_stack(&self);
-    fn print_register(&self);
-    fn asm(&self, str: String, address: u64) -> Result<AsmResult, Error>;
-    fn write_instruction(&self, byte_arr: Vec<u8>);
-}
-
-
-pub struct Machine <'a> {
+pub struct Machine<'a> {
     pub register_map: HashMap<&'a str, unicorn::RegisterX86>,
     pub keystone: keystone::Keystone,
-    pub emu : unicorn::CpuX86,
-    pub sorted_reg_names : Vec<&'a str>
+    pub emu: unicorn::CpuX86,
+    pub sorted_reg_names: Vec<&'a str>,
+    pub byte_size: usize,
 }
 
-impl <'a>Machine<'a> {
+impl<'a> Machine<'a> {
     pub fn print_register(&self) {
-
         println!("----------------- cpu context -----------------");
 
         // 不写 clone 会报 cannot move out of borrowed content
@@ -38,14 +29,20 @@ impl <'a>Machine<'a> {
                 reg_name.push(' ');
             }
 
-            print!("{} : {:016x} ", reg_name, self.emu.reg_read(uc_reg).unwrap());
+            match self.byte_size {
+                4 => print!("{} : {:08x} ", reg_name, self.emu.reg_read(uc_reg).unwrap()),
+                8 => print!(
+                    "{} : {:016x} ",
+                    reg_name,
+                    self.emu.reg_read(uc_reg).unwrap()
+                ),
+                _ => unreachable!(),
+            }
         }
-
-        println!("----------------- stack context -----------------");
     }
 
-    pub fn asm(&self, str: String, address: u64) -> Result<AsmResult, Error>{
-        return self.keystone.asm(str,address);
+    pub fn asm(&self, str: String, address: u64) -> Result<AsmResult, Error> {
+        return self.keystone.asm(str, address);
     }
 
     pub fn write_instruction(&self, byte_arr: Vec<u8>) {
@@ -59,18 +56,28 @@ impl <'a>Machine<'a> {
     }
 
     pub fn print_stack(&self) {
-        let start_address = 0x1300000-64;
-        let mem_data = self.emu.mem_read(start_address,8*4*5).unwrap();
-        // 8 个字节打印一次
-        (0..mem_data.len()).step_by(32).for_each(|idx|{
-            print!("{:016x} :", start_address + idx as u64);
-            (0..4).for_each(|offset|{
-                let mut cur = mem_data[idx+offset*8..idx+offset*8+8].to_vec();
-                cur.reverse();
-                print!("{} ", hex::encode(cur));
-            });
-            println!();
-        });
-    }
+        println!("----------------- stack context -----------------");
 
+        let start_address = (0x1300000 - 8 * self.byte_size) as u64;
+        let mem_data = self
+            .emu
+            .mem_read(start_address, self.byte_size * 4 * 5)
+            .unwrap();
+        // 8 个字节打印一次
+        (0..mem_data.len())
+            .step_by(4 * self.byte_size)
+            .for_each(|idx| {
+                print!("{:016x} :", start_address + idx as u64);
+                (0..4).for_each(|offset| {
+                    let (start_pos, end_pos) = (
+                        idx + offset * self.byte_size,
+                        idx + offset * self.byte_size + self.byte_size,
+                    );
+                    let mut cur = mem_data[start_pos..end_pos].to_vec();
+                    cur.reverse();
+                    print!("{} ", hex::encode(cur));
+                });
+                println!();
+            });
+    }
 }

@@ -12,10 +12,11 @@ pub fn new() -> Machine<'static> {
         .expect("Could not set option to nasm syntax");
     let mut map = HashMap::new();
     init_register_map(&mut map);
+
     let mut cpu = CpuX86::new(unicorn::Mode::MODE_32).expect("failed to instantiate emulator");
-    cpu.reg_write(unicorn::RegisterX86::ESP, 0x01300000);
-    cpu.reg_write(unicorn::RegisterX86::EBP, 0x10000000);
-    cpu.mem_map(0x0000, 0x20000000, unicorn::PROT_ALL);
+    let _ = cpu.reg_write(unicorn::RegisterX86::ESP, 0x01300000);
+    let _ = cpu.reg_write(unicorn::RegisterX86::EBP, 0x10000000);
+    let _ = cpu.mem_map(0x0000, 0x20000000, unicorn::PROT_ALL);
 
     let sorted_x86_reg_name = vec![
         "eax", "ebx", "ecx", "edx", "end", //
@@ -31,6 +32,7 @@ pub fn new() -> Machine<'static> {
         keystone: engine,
         emu: cpu,
         sorted_reg_names: sorted_x86_reg_name,
+        byte_size: 4,
     };
 }
 

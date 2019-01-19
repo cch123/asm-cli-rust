@@ -1,17 +1,18 @@
 pub mod machine;
 
 use crate::machine::interface::Machine;
-fn get_trait() -> Machine <'static>{
+
+fn get_machine() -> Machine <'static>{
     let m = machine::x32::new();
     return m;
 }
 
 fn main() {
-    let m = get_trait();
+    let m = get_machine();
     loop {
         let mut input = String::new();
         match std::io::stdin().read_line(&mut input) {
-            Ok(n) => {
+            Ok(_) => {
                 let result = m.asm(input.to_string(),0);
                 match result {
                     Ok(r) => {
