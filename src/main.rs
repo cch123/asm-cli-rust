@@ -1,8 +1,8 @@
 pub mod machine;
 
-use crate::machine::interface::Interface;
-fn get_trait() -> impl Interface {
-    let m = machine::x64::X64Machine::new();
+use crate::machine::interface::Machine;
+fn get_trait() -> Machine <'static>{
+    let m = machine::x64::new();
     return m;
 }
 
