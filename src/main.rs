@@ -9,6 +9,8 @@ fn get_machine() -> Machine <'static>{
 
 fn main() {
     let m = get_machine();
+    m.print_register();
+    m.print_stack();
     loop {
         let mut input = String::new();
         match std::io::stdin().read_line(&mut input) {
