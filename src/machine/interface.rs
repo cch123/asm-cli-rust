@@ -67,7 +67,12 @@ impl<'a> Machine<'a> {
         (0..mem_data.len())
             .step_by(4 * self.byte_size)
             .for_each(|idx| {
-                print!("{:016x} :", start_address + idx as u64);
+                match self.byte_size {
+                    4 => print!("{:08x} :", start_address + idx as u64),
+                    8 => print!("{:016x} :", start_address + idx as u64),
+                    _ => unreachable!(),
+                }
+
                 (0..4).for_each(|offset| {
                     let (start_pos, end_pos) = (
                         idx + offset * self.byte_size,
