@@ -1,3 +1,7 @@
+extern crate rustyline;
+use rustyline::error::ReadlineError;
+use rustyline::Editor;
+
 pub mod machine;
 
 use crate::machine::interface::Machine;
@@ -21,11 +25,12 @@ fn main() {
     m.print_register();
     m.print_stack();
 
+    let mut rl = Editor::<()>::new();
     loop {
-        let mut input = String::new();
-        match std::io::stdin().read_line(&mut input) {
-            Ok(_) => {
-                let result = m.asm(input.to_string(),0);
+        let input = rl.readline(">> ");
+        match input {
+            Ok(line) => {
+                let result = m.asm(line.to_string(),0);
                 match result {
                     Ok(r) => {
                         m.write_instruction(r.bytes);
@@ -34,9 +39,20 @@ fn main() {
                     }
                     Err(e) => println!("failed to assemble, err: {:?}", e),
                 }
+            },
+            Err(ReadlineError::Interrupted) => {
+                println!("CTRL-C");
+                break
+            },
+            Err(ReadlineError::Eof) => {
+                println!("CTRL-D");
+                break
+            },
+            Err(err) => {
+                println!("Error: {:?}", err);
+                break
             }
-            Err(error) => println!("error when read your input: {}", error),
         }
-        println!();
     }
 }
+
