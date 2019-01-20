@@ -2,6 +2,9 @@ use keystone::{AsmResult, Error};
 use std::collections::HashMap;
 use unicorn::Cpu;
 
+extern crate ansi_term;
+use ansi_term::Colour::{Purple, Yellow, Cyan};
+
 pub struct Machine<'a> {
     pub register_map: HashMap<&'a str, unicorn::RegisterX86>,
     pub keystone: keystone::Keystone,
@@ -12,7 +15,10 @@ pub struct Machine<'a> {
 
 impl<'a> Machine<'a> {
     pub fn print_register(&self) {
-        println!("----------------- cpu context -----------------");
+        println!(
+            "{}",
+            Yellow.paint("----------------- cpu context -----------------")
+        );
 
         // 不写 clone 会报 cannot move out of borrowed content
         for reg_name in self.sorted_reg_names.clone() {
@@ -30,10 +36,14 @@ impl<'a> Machine<'a> {
             }
 
             match self.byte_size {
-                4 => print!("{} : 0x{:08x} ", reg_name, self.emu.reg_read(uc_reg).unwrap()),
+                4 => print!(
+                    "{} : 0x{:08x} ",
+                    Cyan.paint(reg_name),
+                    self.emu.reg_read(uc_reg).unwrap()
+                ),
                 8 => print!(
                     "{} : 0x{:016x} ",
-                    reg_name,
+                    Cyan.paint(reg_name),
                     self.emu.reg_read(uc_reg).unwrap()
                 ),
                 _ => unreachable!(),
@@ -56,7 +66,10 @@ impl<'a> Machine<'a> {
     }
 
     pub fn print_stack(&self) {
-        println!("----------------- stack context -----------------");
+        println!(
+            "{}",
+            Purple.paint("----------------- stack context -----------------")
+        );
 
         let start_address = (0x1300000 - 8 * self.byte_size) as u64;
         let mem_data = self
