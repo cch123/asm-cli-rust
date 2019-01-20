@@ -2,6 +2,9 @@ extern crate rustyline;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
+extern crate ansi_term;
+use ansi_term::Colour::{Black, Blue, Cyan, Green, Purple, Red, Yellow};
+
 pub mod machine;
 
 use crate::machine::interface::Machine;
@@ -27,7 +30,7 @@ fn main() {
 
     let mut rl = Editor::<()>::new();
     loop {
-        let input = rl.readline(">> ");
+        let input = rl.readline(Red.paint(">> ").to_string().as_str());
         match input {
             Ok(line) => {
                 let result = m.asm(line.to_string(),0);
