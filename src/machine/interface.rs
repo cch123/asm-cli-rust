@@ -30,9 +30,9 @@ impl<'a> Machine<'a> {
             }
 
             match self.byte_size {
-                4 => print!("{} : {:08x} ", reg_name, self.emu.reg_read(uc_reg).unwrap()),
+                4 => print!("{} : 0x{:08x} ", reg_name, self.emu.reg_read(uc_reg).unwrap()),
                 8 => print!(
-                    "{} : {:016x} ",
+                    "{} : 0x{:016x} ",
                     reg_name,
                     self.emu.reg_read(uc_reg).unwrap()
                 ),
@@ -68,8 +68,8 @@ impl<'a> Machine<'a> {
             .step_by(4 * self.byte_size)
             .for_each(|idx| {
                 match self.byte_size {
-                    4 => print!("{:08x} :", start_address + idx as u64),
-                    8 => print!("{:016x} :", start_address + idx as u64),
+                    4 => print!("{:08x} : ", start_address + idx as u64),
+                    8 => print!("{:016x} : ", start_address + idx as u64),
                     _ => unreachable!(),
                 }
 

@@ -15,12 +15,12 @@ pub fn new() -> Machine<'static> {
 }
 
 fn unicorn_vm() -> CpuX86 {
-    let mut cpu = CpuX86::new(unicorn::Mode::MODE_64).expect("failed to instantiate emulator");
+    let cpu = CpuX86::new(unicorn::Mode::MODE_64).expect("failed to instantiate emulator");
     cpu.reg_write(unicorn::RegisterX86::RSP, 0x01300000)
         .expect("failed to write to rsp");
     cpu.reg_write(unicorn::RegisterX86::RBP, 0x10000000)
         .expect("failed to write to rbp");
-    cpu.mem_map(0x0000, 0x20000000, unicorn::PROT_ALL)
+    cpu.mem_map(0x0000, 0x20000000, unicorn::Protection::ALL)
         .expect("failed to map memory");
 
     cpu
