@@ -17,6 +17,7 @@ pub fn new() -> Machine<'static> {
         sorted_reg_names: reg_names,
         byte_size: 4,
         previous_reg_value : previous_reg_val_map,
+        sp : unicorn::RegisterX86::ESP,
     }
 }
 

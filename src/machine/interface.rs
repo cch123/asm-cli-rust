@@ -12,6 +12,7 @@ pub struct Machine<'a> {
     pub sorted_reg_names: Vec<&'a str>,
     pub byte_size: usize,
     pub previous_reg_value: HashMap<&'a str, u64>,
+    pub sp : unicorn::RegisterX86,
 }
 
 impl<'a> Machine<'a> {
@@ -98,7 +99,11 @@ impl<'a> Machine<'a> {
                     );
                     let mut cur = mem_data[start_pos..end_pos].to_vec();
                     cur.reverse();
-                    print!("{} ", hex::encode(cur));
+                    if (start_address + start_pos as u64) == self.emu.reg_read(self.sp).unwrap() {
+                        print!("{} ", Blue.paint(hex::encode(cur)));
+                    } else {
+                        print!("{} ", hex::encode(cur));
+                    }
                 });
                 println!();
             });
