@@ -5,12 +5,18 @@ use unicorn::{Cpu, CpuX86};
 use super::interface::Machine;
 
 pub fn new() -> Machine<'static> {
+    let reg_map = init_register_map();
+    let reg_names = sorted_reg_names();
+    let cpu = unicorn_vm();
+    let previous_reg_val_map = previous_reg_value_map(&cpu);
+
     Machine {
-        register_map: init_register_map(),
+        register_map: reg_map,
         keystone: keystone_engine(),
-        emu: unicorn_vm(),
-        sorted_reg_names: sorted_reg_names(),
+        emu: cpu,
+        sorted_reg_names: reg_names,
         byte_size: 4,
+        previous_reg_value : previous_reg_val_map,
     }
 }
 
@@ -69,4 +75,12 @@ fn init_register_map() -> HashMap<&'static str, unicorn::RegisterX86> {
     ]
     .into_iter()
     .collect::<HashMap<_, _>>()
+}
+
+fn previous_reg_value_map(emu : &CpuX86) -> HashMap<&'static str, u64> {
+    let reg_names = sorted_reg_names();
+    let register_map = init_register_map();
+    reg_names.iter().filter(|&&x| x != "end").map(|&reg_name|{
+        (reg_name, emu.reg_read(*register_map.get(reg_name).unwrap()).unwrap())
+    }).collect::<HashMap<_,_>>()
 }
