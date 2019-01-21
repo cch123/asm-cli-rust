@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use unicorn::Cpu;
 
 extern crate ansi_term;
-use ansi_term::Colour::{Purple, Yellow, Cyan};
+use ansi_term::Colour::{Cyan, Purple, Yellow};
 
 pub struct Machine<'a> {
     pub register_map: HashMap<&'a str, unicorn::RegisterX86>,
