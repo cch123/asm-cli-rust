@@ -144,28 +144,3 @@ impl<'a> Machine<'a> {
     }
 }
 
-/*
-func readFlagVals(flags uint64) map[string]int {
-    res := make(map[string]int)
-    // cf:0 zf:0 of:0 sf:0 pf:0 af:0 df:0
-    flagNames := []string{"cf", "zf", "of", "sf", "pf", "af", "df"}
-    var nameToBitMap = map[string]uint{
-        "cf": 0,
-        "pf": 2,
-        "af": 4,
-        "zf": 6,
-        "sf": 7,
-        "df": 10,
-        "of": 11,
-    }
-    for _, flagName := range flagNames {
-        bitPos := nameToBitMap[flagName]
-
-        res[flagName] = 0
-        if flags>>bitPos&1 > 0 {
-            res[flagName] = 1
-        }
-    }
-    return res
-}
-*/
