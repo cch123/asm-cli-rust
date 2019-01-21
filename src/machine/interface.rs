@@ -12,7 +12,7 @@ pub struct Machine<'a> {
     pub sorted_reg_names: Vec<&'a str>,
     pub byte_size: usize,
     pub previous_reg_value: HashMap<&'a str, u64>,
-    pub sp : unicorn::RegisterX86,
+    pub sp: unicorn::RegisterX86,
 }
 
 impl<'a> Machine<'a> {
@@ -53,6 +53,9 @@ impl<'a> Machine<'a> {
                 print!("{} : {} ", padded_reg_name, reg_val_str);
             }
             current_reg_val_map.insert(reg_name, reg_val);
+            if reg_name == "flags" {
+                self.print_flags(reg_val);
+            }
         }
         self.previous_reg_value = current_reg_val_map;
     }
@@ -105,7 +108,7 @@ impl<'a> Machine<'a> {
                     );
                     let mut cur = mem_data[start_pos..end_pos].to_vec();
                     cur.reverse();
-                    if (start_address + start_pos as u64) ==  cur_sp_val {
+                    if (start_address + start_pos as u64) == cur_sp_val {
                         print!("{} ", Blue.paint(hex::encode(cur)));
                     } else {
                         print!("{} ", hex::encode(cur));
@@ -115,4 +118,54 @@ impl<'a> Machine<'a> {
             });
         println!();
     }
+
+    fn print_flags(&self, flag_val: u64) {
+        let flag_names = vec!["cf", "zf", "of", "sf", "pf", "af", "df"];
+        let name_to_bit = vec![
+            ("cf", 0),
+            ("pf", 2),
+            ("af", 4),
+            ("zf", 6),
+            ("sf", 7),
+            ("df", 10),
+            ("of", 11),
+        ]
+        .into_iter()
+        .collect::<HashMap<_, _>>();
+        for flag_name in flag_names {
+            let bit_pos = name_to_bit.get(flag_name).unwrap();
+            let flag_val = flag_val >> (*bit_pos as u64) & 1 as u64;
+            match flag_val {
+                0 => print!("{}({}) ", flag_name, flag_val),
+                1 => print!("{} ", Blue.paint( format!("{}({})",flag_name, flag_val) )),
+                _ => unreachable!()
+            }
+        }
+    }
 }
+
+/*
+func readFlagVals(flags uint64) map[string]int {
+    res := make(map[string]int)
+    // cf:0 zf:0 of:0 sf:0 pf:0 af:0 df:0
+    flagNames := []string{"cf", "zf", "of", "sf", "pf", "af", "df"}
+    var nameToBitMap = map[string]uint{
+        "cf": 0,
+        "pf": 2,
+        "af": 4,
+        "zf": 6,
+        "sf": 7,
+        "df": 10,
+        "of": 11,
+    }
+    for _, flagName := range flagNames {
+        bitPos := nameToBitMap[flagName]
+
+        res[flagName] = 0
+        if flags>>bitPos&1 > 0 {
+            res[flagName] = 1
+        }
+    }
+    return res
+}
+*/
