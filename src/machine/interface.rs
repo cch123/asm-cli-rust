@@ -76,11 +76,17 @@ impl<'a> Machine<'a> {
             "{}",
             Purple.paint("----------------- stack context -----------------")
         );
+        let cur_sp_val = self.emu.reg_read(self.sp).unwrap();
 
-        let start_address = (0x1300000 - 8 * self.byte_size) as u64;
+        //let start_address = (0x1300000 - 8 * self.byte_size) as u64;
+        let mut start_address = 0x1300000;
+        while cur_sp_val < start_address - 4 * self.byte_size as u64 {
+            start_address = start_address - 4 * self.byte_size as u64;
+        }
+        start_address = start_address - 8 * self.byte_size as u64;
         let mem_data = self
             .emu
-            .mem_read(start_address, self.byte_size * 4 * 5)
+            .mem_read(start_address as u64, self.byte_size * 4 * 5)
             .unwrap();
         // 8 个字节打印一次
         (0..mem_data.len())
@@ -99,7 +105,7 @@ impl<'a> Machine<'a> {
                     );
                     let mut cur = mem_data[start_pos..end_pos].to_vec();
                     cur.reverse();
-                    if (start_address + start_pos as u64) == self.emu.reg_read(self.sp).unwrap() {
+                    if (start_address + start_pos as u64) ==  cur_sp_val {
                         print!("{} ", Blue.paint(hex::encode(cur)));
                     } else {
                         print!("{} ", hex::encode(cur));
