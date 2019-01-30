@@ -1,5 +1,5 @@
 [package]
-name = "capstone"
+name = "asm-cli-rust"
 version = "0.1.0"
 authors = ["Xargin <cao1988228@163.com>"]
 edition = "2018"
