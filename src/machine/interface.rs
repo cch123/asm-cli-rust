@@ -1,8 +1,6 @@
 use keystone::{AsmResult, Error};
 use std::collections::HashMap;
 use unicorn::Cpu;
-
-extern crate ansi_term;
 use ansi_term::Colour::{Blue, Purple, Yellow};
 
 pub struct Machine<'a> {
@@ -23,8 +21,7 @@ impl<'a> Machine<'a> {
         );
 
         let mut current_reg_val_map = HashMap::new();
-        // 不写 clone 会报 cannot move out of borrowed content
-        for reg_name in self.sorted_reg_names.clone() {
+        for &reg_name in &self.sorted_reg_names {
             if reg_name == "end" {
                 println!();
                 continue;
