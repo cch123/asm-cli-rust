@@ -86,7 +86,7 @@ impl<'a> Machine<'a> {
         start_address = start_address - 8 * self.byte_size as u64;
         let mem_data = self
             .emu
-            .mem_read(start_address as u64, self.byte_size * 4 * 5)
+            .mem_read_as_vec(start_address as u64, self.byte_size * 4 * 5)
             .unwrap();
         // 8 个字节打印一次
         (0..mem_data.len())
