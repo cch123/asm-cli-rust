@@ -37,7 +37,7 @@ impl<'a> Machine<'a> {
 
             let reg_val = self.emu.reg_read(uc_reg).unwrap();
             let previous_reg_val = *self.previous_reg_value.get(reg_name).unwrap();
-            let mut reg_val_str: String;
+            let reg_val_str: String;
             match self.byte_size {
                 4 => reg_val_str = format!("0x{:08x}", reg_val),
                 8 => reg_val_str = format!("0x{:016x}", reg_val),
