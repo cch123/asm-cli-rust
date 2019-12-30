@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use unicorn::{Cpu, CpuX86};
 
 use super::interface::Machine;
+use maplit::hashmap;
 
 pub fn new() -> Machine<'static> {
     let reg_map = init_register_map();
@@ -16,8 +17,8 @@ pub fn new() -> Machine<'static> {
         emu: cpu,
         sorted_reg_names: reg_names,
         byte_size: 4,
-        previous_reg_value : previous_reg_val_map,
-        sp : unicorn::RegisterX86::ESP,
+        previous_reg_value: previous_reg_val_map,
+        sp: unicorn::RegisterX86::ESP,
     }
 }
 
@@ -56,32 +57,37 @@ fn sorted_reg_names() -> Vec<&'static str> {
 }
 
 fn init_register_map() -> HashMap<&'static str, unicorn::RegisterX86> {
-    vec![
-        ("eax", unicorn::RegisterX86::EAX),
-        ("ebx", unicorn::RegisterX86::EBX),
-        ("ecx", unicorn::RegisterX86::ECX),
-        ("edx", unicorn::RegisterX86::EDX),
-        ("esi", unicorn::RegisterX86::ESI),
-        ("edi", unicorn::RegisterX86::EDI),
-        ("eip", unicorn::RegisterX86::EIP),
-        ("ebp", unicorn::RegisterX86::EBP),
-        ("esp", unicorn::RegisterX86::ESP),
-        ("flags", unicorn::RegisterX86::EFLAGS),
-        ("cs", unicorn::RegisterX86::CS),
-        ("ss", unicorn::RegisterX86::SS),
-        ("ds", unicorn::RegisterX86::DS),
-        ("es", unicorn::RegisterX86::ES),
-        ("fs", unicorn::RegisterX86::FS),
-        ("gs", unicorn::RegisterX86::GS),
-    ]
-    .into_iter()
-    .collect::<HashMap<_, _>>()
+    hashmap! {
+        "eax" => unicorn::RegisterX86::EAX,
+        "ebx" => unicorn::RegisterX86::EBX,
+        "ecx" => unicorn::RegisterX86::ECX,
+        "edx" => unicorn::RegisterX86::EDX,
+        "esi" => unicorn::RegisterX86::ESI,
+        "edi" => unicorn::RegisterX86::EDI,
+        "eip" => unicorn::RegisterX86::EIP,
+        "ebp" => unicorn::RegisterX86::EBP,
+        "esp" => unicorn::RegisterX86::ESP,
+        "flags" => unicorn::RegisterX86::EFLAGS,
+        "cs" => unicorn::RegisterX86::CS,
+        "ss" => unicorn::RegisterX86::SS,
+        "ds" => unicorn::RegisterX86::DS,
+        "es" => unicorn::RegisterX86::ES,
+        "fs" => unicorn::RegisterX86::FS,
+        "gs" => unicorn::RegisterX86::GS,
+    }
 }
 
-fn previous_reg_value_map(emu : &CpuX86) -> HashMap<&'static str, u64> {
+fn previous_reg_value_map(emu: &CpuX86) -> HashMap<&'static str, u64> {
     let reg_names = sorted_reg_names();
     let register_map = init_register_map();
-    reg_names.iter().filter(|&&x| x != "end").map(|&reg_name|{
-        (reg_name, emu.reg_read(*register_map.get(reg_name).unwrap()).unwrap())
-    }).collect::<HashMap<_,_>>()
+    reg_names
+        .iter()
+        .filter(|&&x| x != "end")
+        .map(|&reg_name| {
+            (
+                reg_name,
+                emu.reg_read(*register_map.get(reg_name).unwrap()).unwrap(),
+            )
+        })
+        .collect::<HashMap<_, _>>()
 }

@@ -1,7 +1,7 @@
+use ansi_term::Colour::{Blue, Purple, Yellow};
 use keystone::{AsmResult, Error};
 use std::collections::HashMap;
 use unicorn::Cpu;
-use ansi_term::Colour::{Blue, Purple, Yellow};
 
 pub struct Machine<'a> {
     pub register_map: HashMap<&'a str, unicorn::RegisterX86>,
@@ -134,10 +134,9 @@ impl<'a> Machine<'a> {
             let flag_val = flag_val >> (*bit_pos as u64) & 1 as u64;
             match flag_val {
                 0 => print!("{}({}) ", flag_name, flag_val),
-                1 => print!("{} ", Blue.paint( format!("{}({})",flag_name, flag_val) )),
-                _ => unreachable!()
+                1 => print!("{} ", Blue.paint(format!("{}({})", flag_name, flag_val))),
+                _ => unreachable!(),
             }
         }
     }
 }
-
