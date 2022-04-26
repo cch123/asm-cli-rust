@@ -183,7 +183,7 @@ checksum = "9448015e586b611e5d322f6703812bbca2f1e709d5773ecd38ddb4e3bb649504"
 [[package]]
 name = "keystone"
 version = "0.9.2"
-source = "git+https://github.com/keystone-engine/keystone/#18569351000cf1b8bd1ea2cc8a02c2e17b76391f"
+source = "git+https://github.com/keystone-engine/keystone/?rev=18569351000cf1b8bd1ea2cc8a02c2e17b76391f#18569351000cf1b8bd1ea2cc8a02c2e17b76391f"
 dependencies = [
  "keystone-sys",
  "libc",
@@ -192,7 +192,7 @@ dependencies = [
 [[package]]
 name = "keystone-sys"
 version = "0.9.2"
-source = "git+https://github.com/keystone-engine/keystone/#18569351000cf1b8bd1ea2cc8a02c2e17b76391f"
+source = "git+https://github.com/keystone-engine/keystone/?rev=18569351000cf1b8bd1ea2cc8a02c2e17b76391f#18569351000cf1b8bd1ea2cc8a02c2e17b76391f"
 dependencies = [
  "bitflags",
  "cmake",
@@ -425,7 +425,7 @@ checksum = "8ccb82d61f80a663efe1f787a51b16b5a51e3314d6ac365b08639f52387b33f3"
 [[package]]
 name = "unicorn-engine"
 version = "2.0.0-rc7"
-source = "git+https://github.com/unicorn-engine/unicorn/?branch=dev#8fb4b45f57557eb82a165ec24ed8a2aa2f9f201b"
+source = "git+https://github.com/unicorn-engine/unicorn/?rev=8fb4b45f57557eb82a165ec24ed8a2aa2f9f201b#8fb4b45f57557eb82a165ec24ed8a2aa2f9f201b"
 dependencies = [
  "bitflags",
  "cc",
