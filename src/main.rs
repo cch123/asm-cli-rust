@@ -1,10 +1,11 @@
-use rustyline::error::ReadlineError;
-use rustyline::Editor;
-
 use ansi_term::Colour::Red;
 
-pub mod machine;
+use rustyline::error::ReadlineError;
+use rustyline::{Editor, KeyEvent, Cmd, KeyCode, Modifiers};
 
+use std::env;
+
+pub mod machine;
 use crate::machine::interface::Machine;
 
 fn get_machine(arch_name: String) -> Machine<'static> {
@@ -16,7 +17,14 @@ fn get_machine(arch_name: String) -> Machine<'static> {
 }
 
 fn main() {
-    let mut m: Machine = get_machine("x64".to_string());
+    let mut arch_name = String::new();
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() > 1 {
+        arch_name = args[1].clone();
+    }
+
+    let mut m: Machine = get_machine(arch_name);
 
     let args = std::env::args().collect::<Vec<String>>();
     if args.len() > 1 {
@@ -27,6 +35,9 @@ fn main() {
     m.print_stack();
 
     let mut rl = Editor::<()>::new();
+    rl.bind_sequence(KeyEvent(KeyCode::Down, Modifiers::NONE), Cmd::NextHistory);
+    rl.bind_sequence(KeyEvent(KeyCode::Up, Modifiers::NONE), Cmd::PreviousHistory);
+
     loop {
         let input = rl.readline(Red.paint(">> ").to_string().as_str());
         match input {
@@ -34,6 +45,7 @@ fn main() {
                 let result = m.asm(line.to_string(), 0);
                 match result {
                     Ok(r) => {
+                        rl.add_history_entry(line.as_str());
                         println!(
                             "{} : {} {} : {}",
                             Red.paint("mnemonic"),

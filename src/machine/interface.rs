@@ -1,16 +1,19 @@
 use ansi_term::Colour::{Blue, Purple, Yellow};
 use keystone::{AsmResult, Error};
 use std::collections::HashMap;
-use unicorn::Cpu;
+
+use unicorn_engine::unicorn_const::SECOND_SCALE;
+use unicorn_engine::RegisterX86;
+use unicorn_engine::Unicorn;
 
 pub struct Machine<'a> {
-    pub register_map: HashMap<&'a str, unicorn::RegisterX86>,
+    pub register_map: HashMap<&'a str, RegisterX86>,
     pub keystone: keystone::Keystone,
-    pub emu: unicorn::CpuX86,
+    pub emu: Unicorn<'static, ()>,
     pub sorted_reg_names: Vec<&'a str>,
     pub byte_size: usize,
     pub previous_reg_value: HashMap<&'a str, u64>,
-    pub sp: unicorn::RegisterX86,
+    pub sp: RegisterX86,
 }
 
 impl<'a> Machine<'a> {
@@ -61,12 +64,12 @@ impl<'a> Machine<'a> {
         return self.keystone.asm(str, address);
     }
 
-    pub fn write_instruction(&self, byte_arr: Vec<u8>) {
+    pub fn write_instruction(&mut self, byte_arr: Vec<u8>) {
         let _ = self.emu.mem_write(0x0000, &byte_arr);
         let _ = self.emu.emu_start(
             0x0000,
             (0x0000 + byte_arr.len()) as u64,
-            10 * unicorn::SECOND_SCALE,
+            10 * SECOND_SCALE,
             1000,
         );
     }
