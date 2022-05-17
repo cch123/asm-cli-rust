@@ -5,10 +5,10 @@ authors = ["Xargin <cao1988228@163.com>"]
 edition = "2018"
 
 [dependencies]
-capstone = "^0.6.0"
-keystone = "0.9.0"
-unicorn = "0.9.1"
+capstone = "^0.9.0"
+keystone = {git = "https://github.com/keystone-engine/keystone/", rev = "18569351000cf1b8bd1ea2cc8a02c2e17b76391f"}
+unicorn-engine = {git = "https://github.com/unicorn-engine/unicorn/", rev = "8fb4b45f57557eb82a165ec24ed8a2aa2f9f201b"}
 hex = "0.3.2"
-rustyline = "5.0.5"
+rustyline = "9.1.0"
 ansi_term = "0.11.0"
 maplit = "1"

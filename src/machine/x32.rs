@@ -1,6 +1,9 @@
 use keystone::*;
 use std::collections::HashMap;
-use unicorn::{Cpu, CpuX86};
+
+use unicorn_engine::unicorn_const::{Arch, Mode, Permission};
+use unicorn_engine::RegisterX86;
+use unicorn_engine::Unicorn;
 
 use super::interface::Machine;
 use maplit::hashmap;
@@ -18,28 +21,28 @@ pub fn new() -> Machine<'static> {
         sorted_reg_names: reg_names,
         byte_size: 4,
         previous_reg_value: previous_reg_val_map,
-        sp: unicorn::RegisterX86::ESP,
+        sp: RegisterX86::ESP,
     }
 }
 
-fn unicorn_vm() -> CpuX86 {
-    let cpu = CpuX86::new(unicorn::Mode::MODE_32).expect("failed to instantiate emulator");
-    cpu.reg_write(unicorn::RegisterX86::ESP, 0x01300000)
+fn unicorn_vm() -> Unicorn<'static, ()> {
+    let mut cpu = Unicorn::new(Arch::X86, Mode::MODE_32).expect("failed to instantiate emulator");
+    cpu.reg_write(RegisterX86::ESP, 0x01300000)
         .expect("failed to write to esp");
-    cpu.reg_write(unicorn::RegisterX86::EBP, 0x10000000)
+    cpu.reg_write(RegisterX86::EBP, 0x10000000)
         .expect("failed to write ebp");
-    cpu.mem_map(0x0000, 0x20000000, unicorn::Protection::ALL)
+    cpu.mem_map(0x0000, 0x20000000, Permission::ALL)
         .expect("failed to map memory");
 
     cpu
 }
 
 fn keystone_engine() -> keystone::Keystone {
-    let engine = Keystone::new(Arch::X86, keystone::keystone_const::MODE_32)
+    let engine = Keystone::new(keystone::Arch::X86, keystone::Mode::MODE_32)
         .expect("Could not initialize Keystone engine");
 
     engine
-        .option(OptionType::SYNTAX, keystone::OPT_SYNTAX_INTEL)
+        .option(OptionType::SYNTAX, keystone::OptionValue::SYNTAX_INTEL)
         .expect("Could not set option to nasm syntax");
 
     engine
@@ -56,28 +59,28 @@ fn sorted_reg_names() -> Vec<&'static str> {
     ]
 }
 
-fn init_register_map() -> HashMap<&'static str, unicorn::RegisterX86> {
+fn init_register_map() -> HashMap<&'static str, RegisterX86> {
     hashmap! {
-        "eax" => unicorn::RegisterX86::EAX,
-        "ebx" => unicorn::RegisterX86::EBX,
-        "ecx" => unicorn::RegisterX86::ECX,
-        "edx" => unicorn::RegisterX86::EDX,
-        "esi" => unicorn::RegisterX86::ESI,
-        "edi" => unicorn::RegisterX86::EDI,
-        "eip" => unicorn::RegisterX86::EIP,
-        "ebp" => unicorn::RegisterX86::EBP,
-        "esp" => unicorn::RegisterX86::ESP,
-        "flags" => unicorn::RegisterX86::EFLAGS,
-        "cs" => unicorn::RegisterX86::CS,
-        "ss" => unicorn::RegisterX86::SS,
-        "ds" => unicorn::RegisterX86::DS,
-        "es" => unicorn::RegisterX86::ES,
-        "fs" => unicorn::RegisterX86::FS,
-        "gs" => unicorn::RegisterX86::GS,
+        "eax"   => RegisterX86::EAX,
+        "ebx"   => RegisterX86::EBX,
+        "ecx"   => RegisterX86::ECX,
+        "edx"   => RegisterX86::EDX,
+        "esi"   => RegisterX86::ESI,
+        "edi"   => RegisterX86::EDI,
+        "eip"   => RegisterX86::EIP,
+        "ebp"   => RegisterX86::EBP,
+        "esp"   => RegisterX86::ESP,
+        "flags" => RegisterX86::EFLAGS,
+        "cs"    => RegisterX86::CS,
+        "ss"    => RegisterX86::SS,
+        "ds"    => RegisterX86::DS,
+        "es"    => RegisterX86::ES,
+        "fs"    => RegisterX86::FS,
+        "gs"    => RegisterX86::GS,
     }
 }
 
-fn previous_reg_value_map(emu: &CpuX86) -> HashMap<&'static str, u64> {
+fn previous_reg_value_map(emu: &Unicorn<'static, ()>) -> HashMap<&'static str, u64> {
     let reg_names = sorted_reg_names();
     let register_map = init_register_map();
     reg_names
