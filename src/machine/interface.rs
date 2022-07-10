@@ -40,12 +40,12 @@ impl<'a> Machine<'a> {
 
             let reg_val = self.emu.reg_read(uc_reg).unwrap();
             let previous_reg_val = *self.previous_reg_value.get(reg_name).unwrap();
-            let reg_val_str: String;
-            match self.byte_size {
-                4 => reg_val_str = format!("0x{:08x}", reg_val),
-                8 => reg_val_str = format!("0x{:016x}", reg_val),
+
+            let reg_val_str = match self.byte_size {
+                4 => format!("0x{:08x}", reg_val),
+                8 => format!("0x{:016x}", reg_val),
                 _ => unreachable!(),
-            }
+            };
 
             if previous_reg_val != reg_val {
                 print!("{} : {} ", padded_reg_name, Blue.paint(reg_val_str));
@@ -61,14 +61,15 @@ impl<'a> Machine<'a> {
     }
 
     pub fn asm(&self, str: String, address: u64) -> Result<AsmResult, Error> {
-        return self.keystone.asm(str, address);
+        self.keystone.asm(str, address)
     }
 
     pub fn write_instruction(&mut self, byte_arr: Vec<u8>) {
-        let _ = self.emu.mem_write(0x0000, &byte_arr);
+        let address = 0x0000;
+        let _ = self.emu.mem_write(address, &byte_arr);
         let _ = self.emu.emu_start(
-            0x0000,
-            (0x0000 + byte_arr.len()) as u64,
+            address,
+            address + byte_arr.len() as u64,
             10 * SECOND_SCALE,
             1000,
         );
@@ -82,15 +83,16 @@ impl<'a> Machine<'a> {
         let cur_sp_val = self.emu.reg_read(self.sp).unwrap();
 
         //let start_address = (0x1300000 - 8 * self.byte_size) as u64;
-        let mut start_address = 0x1300000;
+        let mut start_address: u64 = 0x1300000;
         while cur_sp_val < start_address - 4 * self.byte_size as u64 {
-            start_address = start_address - 4 * self.byte_size as u64;
+            start_address -= 4 * self.byte_size as u64;
         }
-        start_address = start_address - 8 * self.byte_size as u64;
+        start_address -= 8 * self.byte_size as u64;
         let mem_data = self
             .emu
-            .mem_read_as_vec(start_address as u64, self.byte_size * 4 * 5)
+            .mem_read_as_vec(start_address, self.byte_size * 4 * 5)
             .unwrap();
+
         // 8 个字节打印一次
         (0..mem_data.len())
             .step_by(4 * self.byte_size)
@@ -129,12 +131,11 @@ impl<'a> Machine<'a> {
             ("sf", 7),
             ("df", 10),
             ("of", 11),
-        ]
-        .into_iter()
-        .collect::<HashMap<_, _>>();
+        ].into_iter().collect::<HashMap<_, _>>();
+
         for flag_name in flag_names {
             let bit_pos = name_to_bit.get(flag_name).unwrap();
-            let flag_val = flag_val >> (*bit_pos as u64) & 1 as u64;
+            let flag_val = flag_val >> (*bit_pos as u64) & 1;
             match flag_val {
                 0 => print!("{}({}) ", flag_name, flag_val),
                 1 => print!("{} ", Blue.paint(format!("{}({})", flag_name, flag_val))),

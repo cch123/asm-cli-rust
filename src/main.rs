@@ -1,35 +1,28 @@
 use ansi_term::Colour::Red;
-
 use rustyline::error::ReadlineError;
 use rustyline::{Editor, KeyEvent, Cmd, KeyCode, Modifiers};
 
 use std::env;
 
 pub mod machine;
+
 use crate::machine::interface::Machine;
 
 fn get_machine(arch_name: String) -> Machine<'static> {
     match arch_name.to_ascii_lowercase().as_str() {
-        "x86" => return machine::x32::new(),
-        "x64" => return machine::x64::new(),
-        _ => return machine::x64::new(),
+        "x86" => machine::x32::new(),
+        "x64" => machine::x64::new(),
+        _ => machine::x64::new(),
     }
 }
 
 fn main() {
-    let mut arch_name = String::new();
     let args: Vec<String> = env::args().collect();
-
-    if args.len() > 1 {
-        arch_name = args[1].clone();
-    }
-
+    let arch_name = match args.get(1) {
+        Some(r) => r.clone(),
+        None => "x64".to_string(),
+    };
     let mut m: Machine = get_machine(arch_name);
-
-    let args = std::env::args().collect::<Vec<String>>();
-    if args.len() > 1 {
-        m = get_machine(args[1].clone());
-    }
 
     m.print_register();
     m.print_stack();
