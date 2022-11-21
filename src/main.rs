@@ -1,29 +1,91 @@
 use ansi_term::Colour::Red;
+use clap::Parser;
+use keystone::{OptionType, OptionValue};
 use rustyline::error::ReadlineError;
-use rustyline::{Editor, KeyEvent, Cmd, KeyCode, Modifiers};
+use rustyline::{Cmd, Editor, KeyCode, KeyEvent, Modifiers};
+use unicorn_engine::unicorn_const::Permission;
 
-use std::env;
+pub mod engine;
 
-pub mod machine;
+use crate::engine::machine::Machine;
 
-use crate::machine::interface::Machine;
+#[derive(clap::ValueEnum, Clone, Debug, PartialEq)]
+#[allow(clippy::upper_case_acronyms)]
+
+enum AssemblerSyntax {
+    INTEL,
+    ATT,
+    GAS,
+    MASM,
+    NASM,
+}
+
+#[derive(clap::Parser, Debug)]
+struct Args {
+    #[arg(short, long)]
+    arch: Option<String>,
+
+    #[arg(short, long, value_enum)]
+    syntax: Option<AssemblerSyntax>,
+
+    #[arg(long, default_value_t = 0x01300000)]
+    initial_sp: u64,
+    #[arg(long, default_value_t = 0x10000000)]
+    initial_fp: u64,
+
+    #[arg(long, default_value_t = 0)]
+    initial_mem_begin: u64,
+    #[arg(long, default_value_t = 0x20000000)]
+    initial_mem_size: usize,
+    // TODO: impl this
+    // #[arg(short, long)]
+    // initial_mem_prot: Permission
+}
 
 fn get_machine(arch_name: String) -> Machine<'static> {
-    match arch_name.to_ascii_lowercase().as_str() {
-        "x86" => machine::x32::new(),
-        "x64" => machine::x64::new(),
-        _ => machine::x64::new(),
-    }
+    Machine::new_from_arch(arch_name.as_str()).unwrap()
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let arch_name = match args.get(1) {
-        Some(r) => r.clone(),
+    // let args: Vec<String> = env::args().collect();
+    let args = Args::parse();
+
+    let arch_name = match args.arch {
+        Some(r) => r,
         None => "x64".to_string(),
     };
+    let ass_syntax = match args.syntax {
+        Some(syntax) => match syntax {
+            AssemblerSyntax::INTEL => OptionValue::SYNTAX_INTEL,
+            AssemblerSyntax::ATT => OptionValue::SYNTAX_ATT,
+            AssemblerSyntax::GAS => OptionValue::SYNTAX_GAS,
+            AssemblerSyntax::MASM => OptionValue::SYNTAX_MASM,
+            AssemblerSyntax::NASM => OptionValue::SYNTAX_NASM,
+        },
+        None => OptionValue::SYNTAX_INTEL,
+    };
+
     let mut m: Machine = get_machine(arch_name);
 
+    // machine init
+    println!("initial: sp={:?} fp={:?}", args.initial_sp, args.initial_fp);
+    println!("ass_syntax: {:?}", ass_syntax);
+    m.set_sp(args.initial_sp)
+        .expect("failed to write stack pointer");
+    m.set_fp(args.initial_fp)
+        .expect("failed to write stack frame");
+    m.emu
+        .mem_map(
+            args.initial_mem_begin,
+            args.initial_mem_size,
+            Permission::ALL,
+        )
+        .expect("failed to mem map");
+    m.assembler
+        .option(OptionType::SYNTAX, ass_syntax)
+        .expect("failed to change assembler syntax");
+
+    m.print_machine();
     m.print_register();
     m.print_stack();
 

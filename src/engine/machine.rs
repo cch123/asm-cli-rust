@@ -1,22 +1,123 @@
 use ansi_term::Colour::{Blue, Purple, Yellow};
 use keystone::{AsmResult, Error};
 use std::collections::HashMap;
-
+use unicorn_engine::unicorn_const::uc_error;
 use unicorn_engine::unicorn_const::SECOND_SCALE;
-use unicorn_engine::RegisterX86;
 use unicorn_engine::Unicorn;
 
+use super::cpu;
+
+#[derive(Debug)]
+pub enum MachineError {
+    Unsupported,
+    Keystone(keystone::Error),
+    Unicorn(uc_error),
+}
+
 pub struct Machine<'a> {
-    pub register_map: HashMap<&'a str, RegisterX86>,
-    pub keystone: keystone::Keystone,
+    pub register_map: HashMap<&'a str, i32>,
+    pub assembler: keystone::Keystone,
     pub emu: Unicorn<'static, ()>,
     pub sorted_reg_names: Vec<&'a str>,
     pub byte_size: usize,
     pub previous_reg_value: HashMap<&'a str, u64>,
-    pub sp: RegisterX86,
+    pub cpu: (cpu::Arch, cpu::Mode),
+    pub sp: i32, // stack pointer
+    pub fp: i32, // stack frame
 }
 
 impl<'a> Machine<'a> {
+    pub fn new(arch: cpu::Arch, mode: cpu::Mode) -> Result<Self, MachineError> {
+        let emu = Self::init_unicorn(arch, mode)?;
+        let assembler = Self::init_keystone(arch, mode)?;
+        let arch_meta = Self::get_arch_meta(arch, mode)?;
+
+        let register_map = arch_meta.register_map();
+        let prev_reg_value = arch_meta.dump_registers(&emu);
+
+        Ok(Self {
+            emu,
+            assembler,
+
+            register_map,
+            sorted_reg_names: arch_meta.sorted_reg_names(),
+            byte_size: arch_meta.int_size(),
+            previous_reg_value: prev_reg_value,
+            cpu: arch_meta.cpu(),
+
+            sp: arch_meta.sp_reg(),
+            fp: arch_meta.fp_reg(),
+        })
+    }
+
+    pub fn new_from_arch(arch_name: &str) -> Result<Self, MachineError> {
+        let arch_meta = Self::get_arch_meta_from_name(arch_name)?;
+        let cpu = arch_meta.cpu();
+        Self::new(cpu.0, cpu.1)
+    }
+
+    pub(crate) fn init_unicorn(
+        arch: cpu::Arch,
+        mode: cpu::Mode,
+    ) -> Result<Unicorn<'static, ()>, MachineError> {
+        Unicorn::new(arch.into(), mode.into()).map_err(MachineError::Unicorn)
+    }
+
+    pub(crate) fn init_keystone(
+        arch: cpu::Arch,
+        mode: cpu::Mode,
+    ) -> Result<keystone::Keystone, MachineError> {
+        keystone::Keystone::new(arch.into(), mode.into()).map_err(MachineError::Keystone)
+    }
+
+    pub(crate) fn get_arch_name(
+        arch: cpu::Arch,
+        mode: cpu::Mode,
+    ) -> Result<&'static str, MachineError> {
+        match arch {
+            cpu::Arch::X86 => match mode {
+                cpu::Mode::Mode32 => Ok("x32"),
+                cpu::Mode::Mode64 => Ok("x64"),
+                // _ => Err(MachineError::Unsupported),
+            },
+            // _ => Err(MachineError::Unsupported),
+        }
+    }
+
+    pub(crate) fn get_arch_meta(
+        arch: cpu::Arch,
+        mode: cpu::Mode,
+    ) -> Result<Box<dyn cpu::ArchMeta>, MachineError> {
+        let arch_name = Self::get_arch_name(arch, mode)?;
+        Self::get_arch_meta_from_name(arch_name)
+    }
+
+    pub(crate) fn get_arch_meta_from_name(
+        arch_name: &str,
+    ) -> Result<Box<dyn cpu::ArchMeta>, MachineError> {
+        match arch_name {
+            "x32" => Ok(Box::new(cpu::X32::new(cpu::Arch::X86))),
+            "x64" => Ok(Box::new(cpu::X64::new(cpu::Arch::X86))),
+            _ => Err(MachineError::Unsupported),
+        }
+    }
+
+    pub fn set_sp(&mut self, value: u64) -> Result<(), MachineError> {
+        self.emu
+            .reg_write(self.sp, value)
+            .map_err(MachineError::Unicorn)
+    }
+    pub fn set_fp(&mut self, value: u64) -> Result<(), MachineError> {
+        self.emu
+            .reg_write(self.fp, value)
+            .map_err(MachineError::Unicorn)
+    }
+}
+
+impl<'a> Machine<'a> {
+    pub fn print_machine(&self) {
+        println!("arch: {:?} mode: {:?}", self.cpu.0, self.cpu.1);
+    }
     pub fn print_register(&mut self) {
         println!(
             "{}",
@@ -61,7 +162,7 @@ impl<'a> Machine<'a> {
     }
 
     pub fn asm(&self, str: String, address: u64) -> Result<AsmResult, Error> {
-        self.keystone.asm(str, address)
+        self.assembler.asm(str, address)
     }
 
     pub fn write_instruction(&mut self, byte_arr: Vec<u8>) {
@@ -131,7 +232,9 @@ impl<'a> Machine<'a> {
             ("sf", 7),
             ("df", 10),
             ("of", 11),
-        ].into_iter().collect::<HashMap<_, _>>();
+        ]
+        .into_iter()
+        .collect::<HashMap<_, _>>();
 
         for flag_name in flag_names {
             let bit_pos = name_to_bit.get(flag_name).unwrap();
