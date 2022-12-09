@@ -12,3 +12,5 @@ hex = "0.3.2"
 rustyline = "9.1.0"
 ansi_term = "0.11.0"
 maplit = "1"
+lazy_static = "1.4.0"
+clap = { version = "4.0.26", features = ["derive"] }
