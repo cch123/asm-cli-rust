@@ -1,6 +1,7 @@
 use ansi_term::Colour::Red;
 use clap::Parser;
-use keystone::{OptionType, OptionValue};
+use keystone::{OptionType, OptionValue, Error};
+use crate::engine::machine::MachineError;
 use rustyline::error::ReadlineError;
 use rustyline::{Cmd, Editor, KeyCode, KeyEvent, Modifiers};
 use unicorn_engine::unicorn_const::Permission;
@@ -98,6 +99,9 @@ fn main() {
         match input {
             Ok(line) => {
                 let result = m.asm(line.to_string(), 0);
+                if line == "" {
+                    println!("failed to assemble, err: {:?}", Err::<Error, MachineError>(MachineError::Unsupported));
+                }
                 match result {
                     Ok(r) => {
                         rl.add_history_entry(line.as_str());
