@@ -81,7 +81,6 @@ impl Arch {
     ) -> HashMap<&'static str, u64> {
         registers
             .keys()
-            .into_iter()
             .filter(|&&x| x != "end") // "end" is pseudo-register (to add new row)
             .map(|&reg_name| {
                 (
