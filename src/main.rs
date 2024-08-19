@@ -99,7 +99,7 @@ fn main() {
         match input {
             Ok(line) => {
                 let result = m.asm(line.to_string(), 0);
-                if line == "" {
+                if line.is_empty() {
                     println!("failed to assemble, err: {:?}", Err::<Error, MachineError>(MachineError::Unsupported));
                 }
                 match result {
