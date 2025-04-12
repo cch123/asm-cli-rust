@@ -38,13 +38,23 @@ struct Args {
     initial_mem_begin: u64,
     #[arg(long, default_value_t = 0x20000000)]
     initial_mem_size: usize,
-    // TODO: impl this
-    // #[arg(short, long)]
-    // initial_mem_prot: Permission
+
+    #[arg(long, default_value_t = String::from("ALL"))]
+    initial_mem_prot: String,
 }
 
 fn get_machine(arch_name: String) -> Machine<'static> {
     Machine::new_from_arch(arch_name.as_str()).unwrap()
+}
+
+fn parse_permission(prot: &str) -> Permission {
+    match prot {
+        "READ" => Permission::READ,
+        "WRITE" => Permission::WRITE,
+        "EXEC" => Permission::EXEC,
+        "NONE" => Permission::NONE,
+        _ => Permission::ALL,
+    }
 }
 
 fn main() {
@@ -71,15 +81,19 @@ fn main() {
     // machine init
     println!("initial: sp={:?} fp={:?}", args.initial_sp, args.initial_fp);
     println!("ass_syntax: {:?}", ass_syntax);
+    
     m.set_sp(args.initial_sp)
         .expect("failed to write stack pointer");
     m.set_fp(args.initial_fp)
         .expect("failed to write stack frame");
+
+    let mem_prot = parse_permission(&args.initial_mem_prot);
+    println!("permission: {:?}", mem_prot);
     m.emu
         .mem_map(
             args.initial_mem_begin,
             args.initial_mem_size,
-            Permission::ALL,
+            mem_prot,
         )
         .expect("failed to mem map");
     m.assembler
